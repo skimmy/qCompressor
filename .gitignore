@@ -131,6 +131,8 @@ Makefile.in
 /install-sh
 /missing
 /stamp-h1
+.deps/
 Makefile
 config.h.in
 config.status
+
