@@ -131,3 +131,6 @@ Makefile.in
 /install-sh
 /missing
 /stamp-h1
+Makefile
+config.h.in
+config.status
