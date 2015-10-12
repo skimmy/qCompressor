@@ -136,3 +136,5 @@ Makefile
 config.h.in
 config.status
 
+# Project specific ignores
+qComp
