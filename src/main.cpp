@@ -4,6 +4,7 @@
 
 #include <cstdlib>
 #include <cmath>
+#include <cstdio>
 
 #include "config.h"
 
@@ -59,7 +60,8 @@ void init() {
 //    Q = 33 + floor(-10log10(p))
 // equation for inverted phred scaled encoded using Sanger fastq format.
 char probToScoreChar(double p) {
-  char c = (33 + floor(-10.0 * log10(1.0-p)));
+  // printf("%.15f %.15f\n",p, -10.0 * log10((double)(1.0-p)));
+  char c = ('!' + round(-10.0 * log10((double)(1.0-p))));
   return c;
 }
 
@@ -74,7 +76,9 @@ std::string reEncodeQuality(const std::string& q, size_t k) {
     int b = ( ((int)i-((int)k-1)) > 0) ? i-k+1 : 0;
     double p = 1.0;
     for (size_t j = b; j <= i; ++j) {
+      //  std::cout << "[" << q[j] <<"] " << 1.0 - qualsMap[q[j] - '!'] << " * " << p ;
       p *= 1.0 - qualsMap[q[j] - '!'];
+      //std::cout << " (" <<probToScoreChar(p) <<")"<< std::endl;
     }
     encQ += probToScoreChar(p);
   }
@@ -141,8 +145,7 @@ int main(int argc, char** argv) {
 
   size_t readsCount = 0;
   Read r;
-  while (!( r = nextRead(inFile) ).bases.empty()) {
-    //    std::cout << r.bases << std::endl;
+  while (!( r = nextRead(inFile) ).bases.empty()) {    
     r.qualities = reEncodeQuality(r.qualities, k);
     writeRead(r,outFile);
     readsCount++;
@@ -155,9 +158,10 @@ int main(int argc, char** argv) {
 
   std::cout << std::endl;
 
-  // std::string QQ = "I((IIIAIII";
+  // std::string QQ = "IIHHDI";
   // std::cout << QQ << std::endl;
-  // std::cout << reEncodeQuality(QQ,3) << std::endl;
+  // std::cout << reEncodeQuality(QQ,1) << std::endl;
+
 
   
   return 0;
