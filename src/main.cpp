@@ -45,7 +45,7 @@ Read nextRead(std::ifstream& is) {
   
     // extra
     is.getline(buffer, MAX_BUFF_SIZE);
-    r.qualities = buffer;
+    r.extra = buffer;
 
     // qualities
     is.getline(buffer, MAX_BUFF_SIZE);
