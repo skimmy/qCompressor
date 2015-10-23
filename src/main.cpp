@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <vector>
 
 #include <cstdlib>
 #include <cmath>
@@ -8,12 +9,19 @@
 
 #include "config.h"
 
+bool printStatistics = false;
+
 double qualsMap[256];
 
 // WARNING: this is the maximum size of a line for the input fastq file. Change
 // it if larger lines need to be supported (e.g., extra long reads like PacBio).
 #define MAX_BUFF_SIZE 4096
 char buffer[MAX_BUFF_SIZE];
+
+// Statistics about minimim and maximum score for a k-mer
+#define MAX_QUAL 50
+std::vector<size_t> minStat(MAX_QUAL, 0);
+std::vector<size_t> maxStat(MAX_QUAL, 0);
 
 struct Read {
   Read() : header(""), bases(""), extra(""), qualities("") {}
@@ -50,6 +58,12 @@ void writeRead(const Read& r, std::ofstream& os) {
   os << r.header << '\n' << r.bases << '\n' << r.extra << '\n' << r.qualities << '\n';
 }
 
+void printStatVectors() {
+  for (size_t i = 0; i < MAX_QUAL; ++i) {
+    std::cout << minStat[i] << '\t' << maxStat[i] << '\t' << (char)(i+'!') << std::endl;
+  }
+}
+
 void init() {
   for(size_t i = 0; i < 256; ++i) {
     qualsMap[i] = pow(10, -1.0 * ( (float)i / 10.0 ) );
@@ -69,20 +83,35 @@ char probToScoreChar(double p) {
 // and re-encode it to represent k-mer quality (BUG-FREE INEFFICIENT VERSION)
 std::string reEncodeQuality(const std::string& q, size_t k) {
   size_t m = q.length();
-
+  size_t t = 0;
   std::string encQ("");
   encQ += q[0];
-  for (size_t i = 1; i < m-1; ++i) {
-    int b = ( ((int)i-((int)k-1)) > 0) ? i-k+1 : 0;
+  for (size_t i = 1; i < m; ++i) {
+    int b = ( ((int)i-((int)k-1)) > 0) ? i-k+1 : 1;
     double p = 1.0;
+    size_t minQ = q[i] - '!';
+    size_t maxQ = q[i] - '!';
+
     for (size_t j = b; j <= i; ++j) {
       //  std::cout << "[" << q[j] <<"] " << 1.0 - qualsMap[q[j] - '!'] << " * " << p ;
-      p *= 1.0 - qualsMap[q[j] - '!'];
+      t = q[j] - '!';
+      std::cout << q[j] << ' ';
+      if (t > maxQ) {
+	maxQ = t;
+      }
+      if (t < minQ) {
+	minQ = t;
+      }
+      p *= 1.0 - qualsMap[t];
       //std::cout << " (" <<probToScoreChar(p) <<")"<< std::endl;
     }
     encQ += probToScoreChar(p);
+    minStat[minQ]++;
+    maxStat[maxQ]++;
   }
-  encQ += q[m-1];
+  //  encQ += q[m-1];
+  std::cout << "\n\n" << q << "\n\n";
+  std::cout << encQ << "\n\n";
   return encQ;
 }
 
@@ -126,8 +155,12 @@ int main(int argc, char** argv) {
   // TODO: Add argument parsing code
   if (argc < 4) {
     std::cerr << "Not enough arguments" << std::endl;
-    std::cerr << "  USAGE qComp [fastq_in] [fastq_out] [k]" << std::endl;
+    std::cerr << "  USAGE qComp [fastq_in] [fastq_out] [k] <stat>" << std::endl;
     exit(1);
+  }
+
+  if (argc > 4) {
+    printStatistics = (atoi(argv[4]) != 0);
   }
 
   init();
@@ -155,6 +188,10 @@ int main(int argc, char** argv) {
 
   inFile.close();
   outFile.close();
+
+  if (printStatistics) {    
+    printStatVectors();
+  }
 
   std::cout << std::endl;
 
