@@ -79,6 +79,27 @@ char probToScoreChar(double p) {
   return c;
 }
 
+// This function decode the quality string on previously encoded on k-mers, it
+// is necessary to use the same value for 'k' otherwise meaningless results are
+// obtained
+std::string decodeQuality(const std::string& q, size_t k) {
+  size_t m = q.length();
+  std::string decQ("");
+  decQ += q[0];
+  for (size_t i = 1; i < m; ++i) {
+    size_t b = (i > (k-1)) ? i - (k-1) : 1;
+    double q_k = 1.0;
+    for (size_t j = b; j < i; ++j) {
+      size_t t = decQ[b] - '!';
+      q_k *= (1.0 - qualsMap[t]);
+    }
+    std::cout << q[i] << '\t' << 1.0 - qualsMap[q[i] - '!'] << '\t' << q_k << '\n';
+    double p = (1.0 - qualsMap[q[i] - '!']) /q_k;
+    decQ += probToScoreChar(p);
+  }
+  return decQ;
+}
+
 // Here is the 'core' function of the software that takes a qualities string
 // and re-encode it to represent k-mer quality (BUG-FREE INEFFICIENT VERSION)
 std::string reEncodeQuality(const std::string& q, size_t k) {
@@ -93,9 +114,7 @@ std::string reEncodeQuality(const std::string& q, size_t k) {
     size_t maxQ = q[i] - '!';
 
     for (size_t j = b; j <= i; ++j) {
-      //  std::cout << "[" << q[j] <<"] " << 1.0 - qualsMap[q[j] - '!'] << " * " << p ;
       t = q[j] - '!';
-      std::cout << q[j] << ' ';
       if (t > maxQ) {
 	maxQ = t;
       }
@@ -103,15 +122,12 @@ std::string reEncodeQuality(const std::string& q, size_t k) {
 	minQ = t;
       }
       p *= 1.0 - qualsMap[t];
-      //std::cout << " (" <<probToScoreChar(p) <<")"<< std::endl;
     }
     encQ += probToScoreChar(p);
     minStat[minQ]++;
     maxStat[maxQ]++;
   }
-  //  encQ += q[m-1];
-  std::cout << "\n\n" << q << "\n\n";
-  std::cout << encQ << "\n\n";
+
   return encQ;
 }
 
@@ -149,6 +165,14 @@ std::string reEncodeQuality(const std::string& q, size_t k) {
   }*/
 
 int main(int argc, char** argv) {
+
+  init();
+  size_t kk = 2;
+  std::string QQ = "@IIHHDI";
+  std::cout << QQ << std::endl;
+  std::string qq = reEncodeQuality(QQ,kk);
+  std::cout << qq << std::endl;
+  std::cout << decodeQuality(qq,kk) << std::endl;
 
   std::cout << std::endl;
   
