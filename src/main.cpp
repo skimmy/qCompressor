@@ -93,7 +93,7 @@ std::string decodeQuality(const std::string& q, size_t k) {
       size_t t = decQ[b] - '!';
       q_k *= (1.0 - qualsMap[t]);
     }
-    std::cout << q[i] << '\t' << 1.0 - qualsMap[q[i] - '!'] << '\t' << q_k << '\n';
+    //std::cout << q[i] << '\t' << 1.0 - qualsMap[q[i] - '!'] << '\t' << q_k << '\n';
     double p = (1.0 - qualsMap[q[i] - '!']) /q_k;
     decQ += probToScoreChar(p);
   }
@@ -167,12 +167,12 @@ std::string reEncodeQuality(const std::string& q, size_t k) {
 int main(int argc, char** argv) {
 
   init();
-  size_t kk = 2;
-  std::string QQ = "@IIHHDI";
-  std::cout << QQ << std::endl;
-  std::string qq = reEncodeQuality(QQ,kk);
-  std::cout << qq << std::endl;
-  std::cout << decodeQuality(qq,kk) << std::endl;
+  // size_t kk = 2;
+  // std::string QQ = "@IIHHDI";
+  // std::cout << QQ << std::endl;
+  // std::string qq = reEncodeQuality(QQ,kk);
+  // std::cout << qq << std::endl;
+  // std::cout << decodeQuality(qq,kk) << std::endl;
 
   std::cout << std::endl;
   
